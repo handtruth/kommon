@@ -21,6 +21,8 @@ allprojects {
         mavenCentral()
         maven("https://mvn.handtruth.com")
     }
+    group = "com.handtruth.kommon"
+    version = versionName
 }
 
 val modules = listOf("log")
@@ -30,12 +32,6 @@ fun Project.configureProject() {
     apply(plugin = "org.jetbrains.kotlin.multiplatform")
     apply<JacocoPlugin>()
     apply<MavenPublishPlugin>()
-
-    ext["versionName"] = versionName
-    ext["versionCode"] = versionCode
-
-    group = "com.handtruth.kommon"
-    version = versionName
 
     val android = extensions["android"] as com.android.build.gradle.LibraryExtension
 
