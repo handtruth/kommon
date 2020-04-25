@@ -21,3 +21,7 @@ class JSConsoleLog(tag: String, level: LogLevel) : TaggedLog(tag, level) {
 }
 
 actual fun Log.Companion.default(tag: String, lvl: LogLevel): Log = JSConsoleLog(tag, lvl)
+
+actual fun Mark.Companion.here(offset: Int): Mark {
+    return Mark("unknown", 0)
+}

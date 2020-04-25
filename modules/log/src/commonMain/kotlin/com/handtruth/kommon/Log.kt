@@ -11,7 +11,7 @@ enum class LogLevel {
     }
 }
 
-class FatalException : RuntimeException {
+class FatalException : Error {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable) : super(message, cause)
 }
@@ -20,11 +20,16 @@ internal expect fun getDefaultTag(): String
 
 internal expect fun Log.writeException(lvl: LogLevel, message: Any?, throwable: Throwable)
 
+object LogContext {
+    inline val String.here get() = "$this at ${Mark.here()}"
+}
+
 abstract class Log(protected var lvl: LogLevel) {
     val level: LogLevel get() = lvl
 
     companion object {
         val void: Log get() = VoidLog
+        val defaultTag get() = getDefaultTag()
     }
 
     protected abstract fun write(lvl: LogLevel, message: Any?)
@@ -40,14 +45,14 @@ abstract class Log(protected var lvl: LogLevel) {
     internal fun internalException(lvl: LogLevel, message: Any?, throwable: Throwable) =
         exception(lvl, message, throwable)
 
-    inline fun write(lvl: LogLevel, message: () -> Any?) {
+    inline fun write(lvl: LogLevel, message: LogContext.() -> Any?) {
         if (lvl <= level)
-            internalWrite(lvl, message())
+            internalWrite(lvl, LogContext.message())
     }
 
-    inline fun exception(lvl: LogLevel, message: () -> Any?, throwable: Throwable) {
+    inline fun exception(lvl: LogLevel, message: LogContext.() -> Any?, throwable: Throwable) {
         if (lvl <= level)
-            internalException(lvl, message(), throwable)
+            internalException(lvl, LogContext.message(), throwable)
     }
 
     inline fun fatal(message: () -> Any?): Nothing {
@@ -62,24 +67,24 @@ abstract class Log(protected var lvl: LogLevel) {
             internalException(LogLevel.Fatal, message().toString(), throwable)
         throw FatalException(str.toString(), throwable)
     }
-    inline fun error(message: () -> Any?) = write(LogLevel.Error, message)
-    inline fun error(throwable: Throwable, message: () -> Any? = { "error occured" }) =
+    inline fun error(message: LogContext.() -> Any?) = write(LogLevel.Error, message)
+    inline fun error(throwable: Throwable, message: LogContext.() -> Any? = { "error occured" }) =
         exception(LogLevel.Error, message, throwable)
     val error: Appendable get() = appender(LogLevel.Error)
-    inline fun warning(message: () -> Any?) = write(LogLevel.Warning, message)
-    inline fun warning(throwable: Throwable, message: () -> Any? = { "error occured" }) =
+    inline fun warning(message: LogContext.() -> Any?) = write(LogLevel.Warning, message)
+    inline fun warning(throwable: Throwable, message: LogContext.() -> Any? = { "error occured" }) =
         exception(LogLevel.Warning, message, throwable)
     val warning: Appendable get() = appender(LogLevel.Warning)
-    inline fun info(message: () -> Any?) = write(LogLevel.Info, message)
-    inline fun info(throwable: Throwable, message: () -> Any? = { "error occured" }) =
+    inline fun info(message: LogContext.() -> Any?) = write(LogLevel.Info, message)
+    inline fun info(throwable: Throwable, message: LogContext.() -> Any? = { "error occured" }) =
         exception(LogLevel.Info, message, throwable)
     val info: Appendable get() = appender(LogLevel.Info)
-    inline fun verbose(message: () -> Any?) = write(LogLevel.Verbose, message)
-    inline fun verbose(throwable: Throwable, message: () -> Any? = { "error occured" }) =
+    inline fun verbose(message: LogContext.() -> Any?) = write(LogLevel.Verbose, message)
+    inline fun verbose(throwable: Throwable, message: LogContext.() -> Any? = { "error occured" }) =
         exception(LogLevel.Verbose, message, throwable)
     val verbose: Appendable get() = appender(LogLevel.Verbose)
-    inline fun debug(message: () -> Any?) = write(LogLevel.Debug, message)
-    inline fun debug(throwable: Throwable, message: () -> Any? = { "error occured" }) =
+    inline fun debug(message: LogContext.() -> Any?) = write(LogLevel.Debug, message)
+    inline fun debug(throwable: Throwable, message: LogContext.() -> Any? = { "error occured" }) =
         exception(LogLevel.Debug, message, throwable)
     val debug: Appendable get() = appender(LogLevel.Debug)
 }
@@ -87,22 +92,3 @@ abstract class Log(protected var lvl: LogLevel) {
 expect fun Log.Companion.default(tag: String = getDefaultTag(), lvl: LogLevel = LogLevel.Info): Log
 
 abstract class TaggedLog(val tag: String, level: LogLevel) : Log(level)
-
-class AppendableLog(
-    private val appendable: Appendable, tag: String = getDefaultTag(),
-    level: LogLevel = LogLevel.Info
-) : TaggedLog(tag, level) {
-    override fun write(lvl: LogLevel, message: Any?): Unit = with(appendable) {
-        append(tag, " [", lvl.actualName, "]: ", message.toString(), "\n")
-    }
-}
-
-class PrintLog(tag: String = getDefaultTag(), level: LogLevel = LogLevel.Info) : TaggedLog(tag, level) {
-    override fun write(lvl: LogLevel, message: Any?) {
-        println("$tag [$lvl]: $message")
-    }
-}
-
-object VoidLog : Log(LogLevel.None) {
-    override fun write(lvl: LogLevel, message: Any?) = Unit
-}

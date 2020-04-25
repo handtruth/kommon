@@ -31,5 +31,5 @@ fun module(name: String) {
 }
 
 module("log")
-module("pom")
+module("bom")
 //include("test-app")

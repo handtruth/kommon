@@ -7,3 +7,7 @@ internal actual fun Log.writeException(lvl: LogLevel, message: Any?, throwable: 
 }
 
 actual fun Log.Companion.default(tag: String, lvl: LogLevel): Log = PrintLog(tag, lvl)
+
+actual fun Mark.Companion.here(offset: Int): Mark {
+    return Mark("unknown", 0)
+}

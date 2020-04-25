@@ -90,18 +90,18 @@ internal fun Log.table(
 
 inline fun <reified T : Any> Log.table(
     lvl: LogLevel, objects: Collection<T>, properties: Array<out KProperty1<T, *>>,
-    header: List<String>?, name: () -> Any?
+    header: List<String>?, name: LogContext.() -> String
 ) {
     if (lvl <= level)
-        table(lvl, objects, properties, header, name().toString())
+        table(lvl, objects, properties, header, LogContext.name())
 }
 
 inline fun <reified T : Any> Log.fatal(
     objects: Collection<T>, vararg properties: KProperty1<T, *>,
     header: List<String>? = null,
-    message: () -> Any? = { T::class.simpleName ?: "Table" }
+    message: LogContext.() -> String = { T::class.simpleName ?: "Table" }
 ): Nothing {
-    val str = message().toString()
+    val str = LogContext.message()
     if (LogLevel.Fatal <= level)
         table(LogLevel.Fatal, objects, properties, header, str)
     throw FatalException(str)
@@ -110,32 +110,31 @@ inline fun <reified T : Any> Log.fatal(
 inline fun <reified T : Any> Log.error(
     objects: Collection<T>, vararg properties: KProperty1<T, *>,
     header: List<String>? = null,
-    name: () -> Any? = { T::class.simpleName ?: "Table" }
+    name: LogContext.() -> String = { T::class.simpleName ?: "Table" }
 ) = table(LogLevel.Error, objects, properties, header, name)
 
 inline fun <reified T : Any> Log.warning(
     objects: Collection<T>, vararg properties: KProperty1<T, *>,
     header: List<String>? = null,
-    name: () -> Any? = { T::class.simpleName ?: "Table" }
+    name: LogContext.() -> String = { T::class.simpleName ?: "Table" }
 ) = table(LogLevel.Warning, objects, properties, header, name)
 
 inline fun <reified T : Any> Log.info(
     objects: Collection<T>, vararg properties: KProperty1<T, *>,
     header: List<String>? = null,
-    name: () -> Any? = { T::class.simpleName ?: "Table" }
-) =
-    table(LogLevel.Info, objects, properties, header, name)
+    name: LogContext.() -> String = { T::class.simpleName ?: "Table" }
+) = table(LogLevel.Info, objects, properties, header, name)
 
 inline fun <reified T : Any> Log.verbose(
     objects: Collection<T>, vararg properties: KProperty1<T, *>,
     header: List<String>? = null,
-    name: () -> Any? = { T::class.simpleName ?: "Table" }
+    name: LogContext.() -> String = { T::class.simpleName ?: "Table" }
 ) = table(LogLevel.Verbose, objects, properties, header, name)
 
 inline fun <reified T : Any> Log.debug(
     objects: Collection<T>, vararg properties: KProperty1<T, *>,
     header: List<String>? = null,
-    name: () -> Any? = { T::class.simpleName ?: "Table" }
+    name: LogContext.() -> String = { T::class.simpleName ?: "Table" }
 ) = table(LogLevel.Debug, objects, properties, header, name)
 
 class SLF4JLog(tag: String = getDefaultTag()) : TaggedLog(tag, LogLevel.None) {
@@ -196,4 +195,9 @@ class WriterLog(
     override fun write(lvl: LogLevel, message: Any?) {
         writer.write("$tag [$lvl]: ${message.toString()}\n")
     }
+}
+
+actual fun Mark.Companion.here(offset: Int): Mark {
+    val pos = Thread.currentThread().stackTrace[3 + offset]
+    return Mark(pos.fileName, pos.lineNumber)
 }

@@ -3,6 +3,7 @@ package com.handtruth.kommon
 import kotlin.test.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class AndroidLogTest {
@@ -19,6 +20,14 @@ class AndroidLogTest {
         val log = Log.default(lvl = LogLevel.Debug)
         log.info { "it is working!" }
         log.debug(datas, SomeData::name, SomeData::id, SomeData::float) { "A table out" }
+    }
+
+    @Test
+    fun testMark() {
+        val builder = StringBuilder()
+        val log = AppendableLog(builder, "TAG")
+        log.info { "Hello World!".here }
+        assertTrue(builder.toString().startsWith("TAG [info]: Hello World! at (AndroidLogTest.kt:"), builder.toString())
     }
 
 }
