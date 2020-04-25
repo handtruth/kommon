@@ -104,7 +104,7 @@ inline fun <reified T : Any> Log.fatal(
     val str = LogContext.message()
     if (LogLevel.Fatal <= level)
         table(LogLevel.Fatal, objects, properties, header, str)
-    throw FatalException(str)
+    throw FatalError(str)
 }
 
 inline fun <reified T : Any> Log.error(
@@ -192,7 +192,7 @@ class WriterLog(
     tag: String = getDefaultTag(),
     level: LogLevel = LogLevel.Info
 ) : TaggedLog(tag, level) {
-    override fun write(lvl: LogLevel, message: Any?) {
+    override fun write(lvl: LogLevel, message: Any?) = synchronized(writer) {
         writer.write("$tag [$lvl]: ${message.toString()}\n")
     }
 }

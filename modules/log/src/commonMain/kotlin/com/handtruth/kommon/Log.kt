@@ -11,7 +11,7 @@ enum class LogLevel {
     }
 }
 
-class FatalException : Error {
+class FatalError : Error {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable) : super(message, cause)
 }
@@ -59,13 +59,13 @@ abstract class Log(protected var lvl: LogLevel) {
         val str = message()
         if (LogLevel.Fatal <= level)
             internalWrite(LogLevel.Fatal, str)
-        throw FatalException(str.toString())
+        throw FatalError(str.toString())
     }
     inline fun fatal(throwable: Throwable, message: () -> Any? = { "error occured" }): Nothing {
         val str = message()
         if (LogLevel.Fatal <= level)
             internalException(LogLevel.Fatal, message().toString(), throwable)
-        throw FatalException(str.toString(), throwable)
+        throw FatalError(str.toString(), throwable)
     }
     inline fun error(message: LogContext.() -> Any?) = write(LogLevel.Error, message)
     inline fun error(throwable: Throwable, message: LogContext.() -> Any? = { "error occured" }) =

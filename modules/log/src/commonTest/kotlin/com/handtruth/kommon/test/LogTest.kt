@@ -1,7 +1,7 @@
 package com.handtruth.kommon.test
 
 import com.handtruth.kommon.AppendableLog
-import com.handtruth.kommon.FatalException
+import com.handtruth.kommon.FatalError
 import com.handtruth.kommon.Log
 import com.handtruth.kommon.LogLevel
 import kotlin.test.*
@@ -25,7 +25,7 @@ class LogTest {
         log.error { "error" }
         assertEquals("TAG [error]: error\n", builder.toString())
         builder.clear()
-        assertFailsWith<FatalException> {
+        assertFailsWith<FatalError> {
             log.fatal { "fatal" }
         }
         assertEquals("TAG [fatal]: fatal\n", builder.toString())
@@ -49,7 +49,7 @@ class LogTest {
         log.error(e) { "error" }
         assertTrue(builder.toString().startsWith("TAG [error]: error: $strE\n"))
         builder.clear()
-        assertFailsWith<FatalException> {
+        assertFailsWith<FatalError> {
             log.fatal(e) { "fatal" }
         }
         assertTrue(builder.toString().startsWith("TAG [fatal]: fatal: $strE\n"))
