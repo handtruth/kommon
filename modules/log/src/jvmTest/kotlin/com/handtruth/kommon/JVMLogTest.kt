@@ -28,7 +28,7 @@ class JVMLogTest {
         log.info { "Hello World!".here }
         assertTrue(builder.toString().startsWith("TAG [info]: Hello World! at (JVMLogTest.kt:"))
         val mark = Mark.here()
-        assertEquals(Mark("JVMLogTest.kt", 31), mark)
+        assertEquals(Mark("JVMLogTest.kt", 30), mark)
     }
 
 }
