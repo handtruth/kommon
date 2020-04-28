@@ -51,12 +51,10 @@ fun Project.configureProject() {
 
         buildTypes {
             val release by getting {
-                isMinifyEnabled = true
-                proguardFiles.addAll(
-                    listOf(
-                        getDefaultProguardFile("proguard-android-optimize.txt"),
-                        "proguard-rules.pro"
-                    ).map { file(it) }
+                isMinifyEnabled = false
+                proguardFiles(
+                    file(getDefaultProguardFile("proguard-android-optimize.txt")),
+                    file("proguard-rules.pro")
                 )
             }
         }
@@ -73,7 +71,7 @@ fun Project.configureProject() {
             }
         }
         android {
-            publishLibraryVariants("release", "debug")
+            publishAllLibraryVariants()
         }
         js {
             browser {
@@ -135,16 +133,7 @@ fun Project.configureProject() {
             val androidMain by getting {
                 dependsOn(jvmCommon)
             }
-            val androidMock by creating {
-                dependencies {
-                    implementation("androidx.test:core")
-                    implementation("androidx.test:runner")
-                    implementation("androidx.test.ext:junit")
-                    implementation("org.robolectric:robolectric")
-                }
-            }
             val androidTest by getting {
-                dependsOn(androidMock)
                 dependencies {
                     implementation(kotlin("test-junit"))
                     implementation("androidx.test:core")

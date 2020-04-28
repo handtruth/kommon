@@ -46,6 +46,8 @@ dependencies {
     val platform = platform("com.handtruth.internal:platform:$platformVersion")
     implementation(platform)
 
+    //implementation("com.handtruth.kommon:kommon-log")
+
     implementation(project(":kommon-log"))
 
     implementation(kotlin("stdlib-jdk8"))

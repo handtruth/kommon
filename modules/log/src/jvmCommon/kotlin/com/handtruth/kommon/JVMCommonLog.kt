@@ -199,5 +199,5 @@ class WriterLog(
 
 actual fun Mark.Companion.here(offset: Int): Mark {
     val pos = Thread.currentThread().stackTrace[3 + offset]
-    return Mark(pos.fileName, pos.lineNumber)
+    return Mark(pos.fileName ?: "unknown", pos.lineNumber)
 }

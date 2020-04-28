@@ -1,11 +1,8 @@
 package com.handtruth.kommon
 
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-@RunWith(RobolectricTestRunner::class)
 class AndroidLogTest {
 
     data class SomeData(val name: String, val id: Int, val float: Double)
@@ -17,7 +14,7 @@ class AndroidLogTest {
             SomeData("Kek", 34435, .0),
             SomeData("Very Long Name", 23, 2.2)
         )
-        val log = Log.default("Application", lvl = LogLevel.Debug)
+        val log = Log.default(lvl = LogLevel.Debug)
         log.info { "it is working!" }
         log.debug(datas, SomeData::name, SomeData::id, SomeData::float) { "A table out" }
     }

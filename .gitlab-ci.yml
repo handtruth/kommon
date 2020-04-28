@@ -17,7 +17,7 @@ variables:
 Build:
   stage: build
   script:
-    - ./gradlew --no-daemon --max-workers=1 assemble
+    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 assemble
   artifacts:
     paths:
       - build
@@ -25,7 +25,16 @@ Build:
 Test:
   stage: test
   script:
-    - ./gradlew --no-daemon --max-workers=1 check
+    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 check
+  artifacts:
+    paths:
+      - build
+
+AndroidTest:
+  stage: test
+  script:
+    - adb connect android
+    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 :test-app:connectedAndroidTest
   artifacts:
     paths:
       - build
@@ -33,7 +42,7 @@ Test:
 Package:
   stage: package
   script:
-    - ./gradlew --no-daemon --max-workers=1 publishToMavenLocal
+    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 publishToMavenLocal
   tags: [ package ]
   only:
     - tags
