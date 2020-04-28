@@ -30,7 +30,7 @@ Test:
     paths:
       - build
 
-AndroidTest:
+.AndroidTest:
   stage: test
   script:
     - adb connect android
