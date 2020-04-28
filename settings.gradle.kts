@@ -32,4 +32,4 @@ fun module(name: String) {
 
 module("log")
 module("bom")
-include("test-app")
+//include("test-app")
