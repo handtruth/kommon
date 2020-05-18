@@ -23,7 +23,7 @@ pluginManagement {
 }
 
 val prefix = "kommon"
-rootProject.name = prefix
+rootProject.name = "root-$prefix"
 
 fun module(name: String) {
     include(":$prefix-$name")
@@ -32,4 +32,10 @@ fun module(name: String) {
 
 module("log")
 module("bom")
+module("delegates")
+module("state")
+
+include(":$prefix")
+project(":$prefix").projectDir = file("modules/all")
+
 //include("test-app")

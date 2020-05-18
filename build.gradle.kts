@@ -1,10 +1,12 @@
 @file:Suppress("UNUSED_VARIABLE")
 
+import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
+import com.android.build.gradle.LibraryPlugin
+
 plugins {
-    base
     id("com.gladed.androidgitversion")
-    id("com.android.library").apply(false)
-    kotlin("multiplatform").apply(false)
+    id("com.android.library") apply false
+    kotlin("multiplatform") apply false
 }
 
 androidGitVersion {
@@ -25,11 +27,11 @@ allprojects {
     version = versionName
 }
 
-val modules = listOf("log")
+val libModules by extra { listOf("log", "delegates", "state") }
 
 fun Project.configureProject() {
-    apply(plugin = "com.android.library")
-    apply(plugin = "org.jetbrains.kotlin.multiplatform")
+    apply<LibraryPlugin>()
+    apply<KotlinMultiplatformPluginWrapper>()
     apply<JacocoPlugin>()
     apply<MavenPublishPlugin>()
 
@@ -84,6 +86,7 @@ fun Project.configureProject() {
             nodejs()
         }
         wasm32()
+        /*
         linuxArm32Hfp()
         linuxArm64()
         linuxMips32()
@@ -95,13 +98,14 @@ fun Project.configureProject() {
         ios()
         iosArm32()
         iosArm64()
+        */
 
         sourceSets {
             fun kotlinx(name: String) = "org.jetbrains.kotlinx:kotlinx-$name"
+            val platformVersion: String by project
+            val platform = dependencies.platform("com.handtruth.internal:platform:$platformVersion")
             all {
                 dependencies {
-                    val platformVersion: String by project
-                    val platform = dependencies.platform("com.handtruth.internal:platform:$platformVersion")
                     implementation(platform)
                 }
             }
@@ -119,6 +123,7 @@ fun Project.configureProject() {
             val jvmCommon by creating {
                 dependsOn(commonMain)
                 dependencies {
+                    compileOnly(platform)
                     implementation(kotlin("stdlib-jdk8"))
                 }
             }
@@ -156,16 +161,13 @@ fun Project.configureProject() {
                 dependsOn(commonMain)
             }
 
-            ios()
-            iosArm32()
-            iosArm64()
             sequenceOf(
-                "wasm32", "linuxArm32Hfp", "linuxArm64", "linuxMips32", "linuxMipsel32", "linuxX64", "mingwX86",
-                "mingwX64", "ios", "iosArm32", "iosArm64"
+                "wasm32"//, "linuxArm32Hfp", "linuxArm64", "linuxMips32", "linuxMipsel32", "linuxX64",
+                //"mingwX86", "mingwX64", "ios", "iosArm32", "iosArm64"
             ).forEach {
                 asMap["${it}Main"]?.apply {
                     dependsOn(nativeCommon)
-                } ?: println("NOT FOUND $it")
+                }
             }
         }
     }
@@ -205,4 +207,5 @@ fun Project.configureProject() {
     }
 }
 
-modules.forEach { project(":kommon-$it").configureProject() }
+libModules.forEach { project(":kommon-$it").configureProject() }
+project(":kommon").configureProject()

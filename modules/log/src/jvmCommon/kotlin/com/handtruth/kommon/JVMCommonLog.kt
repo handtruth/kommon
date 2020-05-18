@@ -159,8 +159,8 @@ class SLF4JLog(tag: String = getDefaultTag()) : TaggedLog(tag, LogLevel.None) {
             LogLevel.Error -> logger.error(str)
             LogLevel.Warning -> logger.warn(str)
             LogLevel.Info -> logger.info(str)
-            LogLevel.Verbose -> logger.trace(str)
-            LogLevel.Debug -> logger.debug(str)
+            LogLevel.Verbose -> logger.debug(str)
+            LogLevel.Debug -> logger.trace(str)
         }
     }
 
@@ -172,8 +172,8 @@ class SLF4JLog(tag: String = getDefaultTag()) : TaggedLog(tag, LogLevel.None) {
             LogLevel.Error -> logger.error(str, throwable)
             LogLevel.Warning -> logger.warn(str, throwable)
             LogLevel.Info -> logger.info(str, throwable)
-            LogLevel.Verbose -> logger.trace(str, throwable)
-            LogLevel.Debug -> logger.debug(str, throwable)
+            LogLevel.Verbose -> logger.debug(str, throwable)
+            LogLevel.Debug -> logger.trace(str, throwable)
         }
     }
 }
