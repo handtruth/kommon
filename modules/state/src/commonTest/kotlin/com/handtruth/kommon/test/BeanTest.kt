@@ -31,4 +31,17 @@ class BeanTest {
         assertEquals(listOf("1", "2", "D", "3"), list)
     }
 
+    //@Test
+    /*
+    fun contextualBeanJarTest() = testSuspend {
+        val jar = BeanJar()
+        jar.setBean(23)
+        val actual: Int
+        withContext(jar) {
+            actual = jar.getBean()
+        }
+        assertEquals(23, actual)
+    }
+     */
+
 }

@@ -6,7 +6,7 @@ internal actual fun Log.writeException(lvl: LogLevel, message: Any?, throwable: 
     internalWrite(lvl, "$message: $throwable")
 }
 
-actual fun Log.Companion.default(tag: String, lvl: LogLevel): Log = PrintLog(tag, lvl)
+actual fun Log.Key.default(tag: String, lvl: LogLevel): Log = PrintLog(tag, lvl)
 
 actual fun Mark.Companion.here(offset: Int): Mark {
     return Mark("unknown", 0)

@@ -44,15 +44,18 @@ class LogTest {
         log.info(e) { "info" }
         assertEquals("", builder.toString())
         log.warning(e) { "warning" }
-        assertTrue(builder.toString().startsWith("TAG [warning]: warning: $strE\n"))
+        fun sukaBlyatSlozno(): String {
+            return builder.toString().split('\n', '\r').find { it.isNotEmpty() }!!
+        }
+        assertEquals("TAG [warning]: warning: $strE", sukaBlyatSlozno())
         builder.clear()
         log.error(e) { "error" }
-        assertTrue(builder.toString().startsWith("TAG [error]: error: $strE\n"))
+        assertEquals("TAG [error]: error: $strE", sukaBlyatSlozno())
         builder.clear()
         assertFailsWith<FatalError> {
             log.fatal(e) { "fatal" }
         }
-        assertTrue(builder.toString().startsWith("TAG [fatal]: fatal: $strE\n"))
+        assertEquals("TAG [fatal]: fatal: $strE", sukaBlyatSlozno())
     }
 
 }

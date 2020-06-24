@@ -20,13 +20,13 @@ dependencies.constraints {
         //"linuxMipsel32", "linuxX64", "mingwX86", "mingwX64", "ios", "iosArm32", "iosArm64"
     ).map { it.toLowerCase() }
     fun module(name: String) {
-        api("$group:kommon$name:$version")
+        api("$group:kommon-$name:$version")
         variants.forEach {
-            api("$group:kommon$name-$it:$version")
+            api("$group:kommon-$name-$it:$version")
         }
     }
     for (lib in libModules) {
-        module("-$lib")
+        module(lib)
     }
-    module("")
+    module("all")
 }
