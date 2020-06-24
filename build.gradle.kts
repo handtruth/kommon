@@ -20,7 +20,6 @@ allprojects {
     repositories {
         google()
         jcenter()
-        mavenCentral()
         maven("https://mvn.handtruth.com")
     }
     group = "com.handtruth.kommon"
@@ -102,11 +101,13 @@ fun Project.configureProject() {
 
         sourceSets {
             fun kotlinx(name: String) = "org.jetbrains.kotlinx:kotlinx-$name"
+            fun ktor(name: String) = "io.ktor:ktor-$name"
             val platformVersion: String by project
             val platform = dependencies.platform("com.handtruth.internal:platform:$platformVersion")
             all {
                 dependencies {
                     implementation(platform)
+                    //compileOnly(platform)
                 }
             }
             val commonMain by getting {
@@ -118,6 +119,7 @@ fun Project.configureProject() {
                 dependencies {
                     implementation(kotlin("test-common"))
                     implementation(kotlin("test-annotations-common"))
+                    //implementation(ktor("test-dispatcher"))
                 }
             }
             val jvmCommon by creating {
@@ -133,6 +135,7 @@ fun Project.configureProject() {
             val jvmTest by getting {
                 dependencies {
                     implementation(kotlin("test-junit"))
+                    //implementation(ktor("test-dispatcher-jvm"))
                 }
             }
             val androidMain by getting {
@@ -145,6 +148,7 @@ fun Project.configureProject() {
                     implementation("androidx.test:runner")
                     implementation("androidx.test.ext:junit")
                     implementation("org.robolectric:robolectric")
+                    //implementation(ktor("test-dispatcher-jvm"))
                 }
             }
             val jsMain by getting {
@@ -155,18 +159,29 @@ fun Project.configureProject() {
             val jsTest by getting {
                 dependencies {
                     implementation(kotlin("test-js"))
+                    //implementation(ktor("test-dispatcher-js"))
                 }
             }
-            val nativeCommon by creating {
+            val nativeMain by creating {
                 dependsOn(commonMain)
+            }
+            val nativeTest by creating {
+                dependsOn(commonMain)
+                dependencies {
+                    //implementation(ktor("test-dispatcher-native"))
+                }
             }
 
             sequenceOf(
                 "wasm32"//, "linuxArm32Hfp", "linuxArm64", "linuxMips32", "linuxMipsel32", "linuxX64",
                 //"mingwX86", "mingwX64", "ios", "iosArm32", "iosArm64"
             ).forEach {
-                asMap["${it}Main"]?.apply {
-                    dependsOn(nativeCommon)
+                val map = asMap
+                map["${it}Main"]?.apply {
+                    dependsOn(nativeMain)
+                }
+                map["${it}Test"]?.apply {
+                    dependsOn(nativeTest)
                 }
             }
         }
@@ -208,4 +223,4 @@ fun Project.configureProject() {
 }
 
 libModules.forEach { project(":kommon-$it").configureProject() }
-project(":kommon").configureProject()
+project(":kommon-all").configureProject()

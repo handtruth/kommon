@@ -1,5 +1,7 @@
 package com.handtruth.kommon
 
+import kotlin.coroutines.CoroutineContext
+
 enum class LogLevel {
     None, Fatal, Error, Warning, Info, Verbose, Debug;
     val actualName = name.toLowerCase()
@@ -24,10 +26,12 @@ object LogContext {
     inline val String.here get() = "$this at ${Mark.here()}"
 }
 
-abstract class Log(protected var lvl: LogLevel) {
+abstract class Log(protected var lvl: LogLevel) : CoroutineContext.Element {
     val level: LogLevel get() = lvl
 
-    companion object {
+    final override val key = Key
+
+    companion object Key : CoroutineContext.Key<Log> {
         val void: Log get() = VoidLog
         val defaultTag get() = getDefaultTag()
     }
@@ -89,6 +93,6 @@ abstract class Log(protected var lvl: LogLevel) {
     val debug: Appendable get() = appender(LogLevel.Debug)
 }
 
-expect fun Log.Companion.default(tag: String = getDefaultTag(), lvl: LogLevel = LogLevel.Info): Log
+expect fun Log.Key.default(tag: String = getDefaultTag(), lvl: LogLevel = LogLevel.Info): Log
 
 abstract class TaggedLog(val tag: String, level: LogLevel) : Log(level)

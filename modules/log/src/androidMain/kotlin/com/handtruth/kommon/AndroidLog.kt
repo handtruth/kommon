@@ -40,4 +40,4 @@ class AndroidLog(tag: String, level: LogLevel) : TaggedLog(tag, level) {
     }
 }
 
-actual fun Log.Companion.default(tag: String, lvl: LogLevel): Log = AndroidLog(tag, lvl)
+actual fun Log.Key.default(tag: String, lvl: LogLevel): Log = AndroidLog(tag, lvl)
