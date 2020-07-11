@@ -1,7 +1,7 @@
 @file:Suppress("UNUSED_VARIABLE")
 
-import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
 import com.android.build.gradle.LibraryPlugin
+import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
 
 plugins {
     id("com.gladed.androidgitversion")
@@ -26,7 +26,7 @@ allprojects {
     version = versionName
 }
 
-val libModules by extra { listOf("log", "delegates", "state") }
+val libModules by extra { listOf("concurrent", "log", "delegates", "state") }
 
 fun Project.configureProject() {
     apply<LibraryPlugin>()
@@ -84,7 +84,7 @@ fun Project.configureProject() {
             }
             nodejs()
         }
-        wasm32()
+        //wasm32()
         /*
         linuxArm32Hfp()
         linuxArm64()
@@ -107,6 +107,7 @@ fun Project.configureProject() {
             all {
                 dependencies {
                     implementation(platform)
+                    api(platform)
                     //compileOnly(platform)
                 }
             }
@@ -172,8 +173,8 @@ fun Project.configureProject() {
                 }
             }
 
-            sequenceOf(
-                "wasm32"//, "linuxArm32Hfp", "linuxArm64", "linuxMips32", "linuxMipsel32", "linuxX64",
+            sequenceOf<String>(
+                //"wasm32"//, "linuxArm32Hfp", "linuxArm64", "linuxMips32", "linuxMipsel32", "linuxX64",
                 //"mingwX86", "mingwX64", "ios", "iosArm32", "iosArm64"
             ).forEach {
                 val map = asMap
