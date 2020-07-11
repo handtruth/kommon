@@ -4,6 +4,7 @@ package com.handtruth.kommon.concurrent
 
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.selects.SelectClause1
 import kotlinx.coroutines.selects.SelectInstance
 import kotlinx.coroutines.sync.Mutex
@@ -17,11 +18,20 @@ interface Condition<T> {
     fun wakeAll(item: T)
     suspend fun wait(): T
     fun cancel(exception: CancellationException)
+
+    enum class Variants {
+        COW, LinkedQueue
+    }
 }
 
-fun <T> Condition(): Condition<T> = ConditionImpl()
+fun <T> Condition(variant: Condition.Variants = Condition.Variants.COW): Condition<T> {
+    return when (variant) {
+        Condition.Variants.COW -> COWConditionImpl()
+        Condition.Variants.LinkedQueue -> LinkedListConditionImpl()
+    }
+}
 
-private class ConditionImpl<T> : Condition<T>, SelectClause1<T> {
+private class COWConditionImpl<T> : Condition<T>, SelectClause1<T> {
     private class Info<T>(val continuation: CancellableContinuation<T>) {
         private val notUsed = atomic(true)
         fun use() = notUsed.getAndSet(false)
@@ -59,7 +69,7 @@ private class ConditionImpl<T> : Condition<T>, SelectClause1<T> {
                 return
             }
         }
-        throw IllegalStateException("nothing to wake")
+        error("nothing to wake")
     }
 
     override fun wakeAll(item: T) {
@@ -86,6 +96,53 @@ private class ConditionImpl<T> : Condition<T>, SelectClause1<T> {
             add(continuation)
             lock.unlock()
         }
+    }
+
+    @InternalCoroutinesApi
+    override fun <R> registerSelectClause1(select: SelectInstance<R>, block: suspend (T) -> R) {
+        val task = CoroutineScope(select.completion.context).async { wait() }
+        task.onAwait.registerSelectClause1(select, block)
+        select.disposeOnSelect(DisposableHandle { if (task.isActive) task.cancel() })
+    }
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+private class LinkedListConditionImpl<T> : Condition<T>, SelectClause1<T> {
+
+    private val channel = Channel<CancellableContinuation<T>>(Channel.UNLIMITED)
+
+    override val count get() = throw UnsupportedOperationException()
+    override val isEmpty get() = channel.isEmpty
+    override val onWake get() = this
+
+    override fun wakeOne(item: T) {
+        var continuation: CancellableContinuation<T>
+        do {
+            continuation = channel.poll() ?: error("nothing to wake")
+        } while (!continuation.isActive)
+        continuation.resume(item)
+    }
+
+    private inline fun onEach(block: (CancellableContinuation<T>) -> Unit) {
+        do {
+            val continuation = channel.poll()
+            continuation?.let {
+                if (it.isActive)
+                    block(it)
+            }
+        } while (continuation != null)
+    }
+
+    override fun wakeAll(item: T) {
+        onEach { it.resume(item) }
+    }
+
+    override suspend fun wait(): T = suspendCancellableCoroutine {
+        check(channel.offer(it))
+    }
+
+    override fun cancel(exception: CancellationException) {
+        onEach { it.cancel(exception) }
     }
 
     @InternalCoroutinesApi

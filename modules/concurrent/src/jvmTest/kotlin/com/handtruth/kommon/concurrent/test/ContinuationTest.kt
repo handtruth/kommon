@@ -15,7 +15,7 @@ class ContinuationTest {
     fun selectClause(): Unit = runBlocking {
         println("started")
         val condition = Condition<String>()
-        val result = async {
+        val result = async(start = CoroutineStart.UNDISPATCHED) {
             select<String> {
                 condition.onWake {
                     println(it)
@@ -27,8 +27,6 @@ class ContinuationTest {
                 }
             }
         }
-
-        delay(500)
         condition.wakeOne("good")
         assertEquals("good", result.await())
     }

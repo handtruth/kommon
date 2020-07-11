@@ -8,13 +8,14 @@ import kotlin.test.assertEquals
 
 class ReadWriteMutexTest {
 
+    @Test
     fun readWriteMutexTest(): Unit = runBlocking {
         val resource = Resource(Unit)
         val mutex = ReadWriteMutex(10)
         val writeMutex = RecursiveMutex(mutex.write)
         writeMutex as JobRecursiveMutexImpl
-        val condition = Condition<Unit>()
-        val write = launch(Dispatchers.IO) {
+        val condition = Condition<Unit>(Condition.Variants.LinkedQueue)
+        val write = launch(Dispatchers.IO, start = CoroutineStart.UNDISPATCHED) {
             condition.wait()
             println("write")
             repeat(10000) {
@@ -31,7 +32,7 @@ class ReadWriteMutexTest {
                 }
             }
         }
-        val read = launch(Dispatchers.IO) {
+        val read = launch(Dispatchers.IO, start = CoroutineStart.UNDISPATCHED) {
             condition.wait()
             println("read")
             repeat(10000) {
@@ -45,7 +46,6 @@ class ReadWriteMutexTest {
                 }
             }
         }
-        delay(100)
         condition.wakeAll(Unit)
         write.join()
         read.join()

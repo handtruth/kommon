@@ -105,6 +105,9 @@ fun Project.configureProject() {
             val platformVersion: String by project
             val platform = dependencies.platform("com.handtruth.internal:platform:$platformVersion")
             all {
+                with(languageSettings) {
+                    useExperimentalAnnotation("kotlin.RequiresOptIn")
+                }
                 dependencies {
                     implementation(platform)
                     api(platform)
