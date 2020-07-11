@@ -8,7 +8,6 @@ import kotlin.test.assertEquals
 
 class ReadWriteMutexTest {
 
-    @Test
     fun readWriteMutexTest(): Unit = runBlocking {
         val resource = Resource(Unit)
         val mutex = ReadWriteMutex(10)
@@ -27,8 +26,8 @@ class ReadWriteMutexTest {
                                 yield()
                             }
                         }
+                        assertEquals(1, writeMutex.getCount())
                     }
-                    assertEquals(0, writeMutex.getCount())
                 }
             }
         }
@@ -51,6 +50,13 @@ class ReadWriteMutexTest {
         write.join()
         read.join()
         Unit
+    }
+
+    @Test
+    fun readWriteMutexTestRepeat() {
+        repeat(100) {
+            readWriteMutexTest()
+        }
     }
 
 }
