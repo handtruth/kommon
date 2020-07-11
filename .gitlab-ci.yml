@@ -17,7 +17,7 @@ variables:
 Build:
   stage: build
   script:
-    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 assemble
+    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 --stacktrace assemble
   artifacts:
     paths:
       - build
@@ -25,7 +25,7 @@ Build:
 Test:
   stage: test
   script:
-    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 check
+    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 --stacktrace check
   artifacts:
     paths:
       - build
@@ -34,7 +34,7 @@ Test:
   stage: test
   script:
     - adb connect android
-    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 :test-app:connectedAndroidTest
+    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 --stacktrace :test-app:connectedAndroidTest
   artifacts:
     paths:
       - build
@@ -42,7 +42,7 @@ Test:
 Package:
   stage: package
   script:
-    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 publishToMavenLocal
+    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 --stacktrace publishToMavenLocal
   tags: [ package ]
   only:
     - tags
