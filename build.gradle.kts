@@ -107,6 +107,7 @@ fun Project.configureProject() {
             all {
                 with(languageSettings) {
                     useExperimentalAnnotation("kotlin.RequiresOptIn")
+                    useExperimentalAnnotation("kotlinx.coroutines.ExperimentalCoroutinesApi")
                 }
                 dependencies {
                     implementation(platform)
