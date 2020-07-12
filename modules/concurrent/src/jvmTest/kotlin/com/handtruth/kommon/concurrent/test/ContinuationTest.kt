@@ -24,6 +24,7 @@ class ContinuationTest {
                 }
             }
         }
+        yield()
         condition.wakeOne("good")
         assertEquals("good", result.await())
     }
