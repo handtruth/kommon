@@ -2,6 +2,8 @@
 
 import com.android.build.gradle.LibraryPlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
+import com.android.build.gradle.LibraryExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
     id("com.gladed.androidgitversion")
@@ -34,15 +36,13 @@ fun Project.configureProject() {
     apply<JacocoPlugin>()
     apply<MavenPublishPlugin>()
 
-    val android = extensions["android"] as com.android.build.gradle.LibraryExtension
-
-    with(android) {
-        compileSdkVersion(29)
-        buildToolsVersion("29.0.3")
+    configure<LibraryExtension> {
+        compileSdkVersion(30)
+        buildToolsVersion("28.0.3")
 
         defaultConfig {
             minSdkVersion(16)
-            targetSdkVersion(29)
+            targetSdkVersion(30)
             versionCode = versionCode
             versionName = versionName
 
@@ -61,9 +61,7 @@ fun Project.configureProject() {
         }
     }
 
-    val kotlin = extensions["kotlin"] as org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-
-    with(kotlin) {
+    configure<KotlinMultiplatformExtension> {
         jvm {
             compilations.all {
                 kotlinOptions {
@@ -124,7 +122,8 @@ fun Project.configureProject() {
                 dependencies {
                     implementation(kotlin("test-common"))
                     implementation(kotlin("test-annotations-common"))
-                    //implementation(ktor("test-dispatcher"))
+                    implementation(kotlinx("coroutines-core-common"))
+                    implementation(ktor("test-dispatcher"))
                 }
             }
             val jvmCommon by creating {
@@ -140,7 +139,8 @@ fun Project.configureProject() {
             val jvmTest by getting {
                 dependencies {
                     implementation(kotlin("test-junit"))
-                    //implementation(ktor("test-dispatcher-jvm"))
+                    implementation(kotlinx("coroutines-core"))
+                    implementation(ktor("test-dispatcher-jvm"))
                 }
             }
             val androidMain by getting {
@@ -153,7 +153,8 @@ fun Project.configureProject() {
                     implementation("androidx.test:runner")
                     implementation("androidx.test.ext:junit")
                     implementation("org.robolectric:robolectric")
-                    //implementation(ktor("test-dispatcher-jvm"))
+                    implementation(kotlinx("coroutines-android"))
+                    implementation(ktor("test-dispatcher-jvm"))
                 }
             }
             val jsMain by getting {
@@ -164,7 +165,8 @@ fun Project.configureProject() {
             val jsTest by getting {
                 dependencies {
                     implementation(kotlin("test-js"))
-                    //implementation(ktor("test-dispatcher-js"))
+                    implementation(kotlinx("coroutines-core-js"))
+                    implementation(ktor("test-dispatcher-js"))
                 }
             }
             val nativeMain by creating {
@@ -173,7 +175,8 @@ fun Project.configureProject() {
             val nativeTest by creating {
                 dependsOn(commonMain)
                 dependencies {
-                    //implementation(ktor("test-dispatcher-native"))
+                    implementation(kotlinx("coroutines-core-native"))
+                    implementation(ktor("test-dispatcher-native"))
                 }
             }
 
@@ -228,4 +231,4 @@ fun Project.configureProject() {
 }
 
 libModules.forEach { project(":kommon-$it").configureProject() }
-project(":kommon-all").configureProject()
+//project(":kommon-all").configureProject()

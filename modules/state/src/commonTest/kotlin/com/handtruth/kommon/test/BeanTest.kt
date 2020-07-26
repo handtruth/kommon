@@ -1,8 +1,8 @@
 package com.handtruth.kommon.test
 
-import com.handtruth.kommon.BeanJar
-import com.handtruth.kommon.BeanNotFoundException
-import com.handtruth.kommon.getBeanOrNull
+import com.handtruth.kommon.*
+import io.ktor.test.dispatcher.testSuspend
+import kotlinx.coroutines.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -10,7 +10,7 @@ import kotlin.test.assertNull
 
 class BeanTest {
 
-    data class ObjectWithBeans(val other: String) : BeanJar()
+    data class ObjectWithBeans(val other: String) : BeanJar.Simple()
 
     @Test
     fun beanJarTest() {
@@ -31,17 +31,18 @@ class BeanTest {
         assertEquals(listOf("1", "2", "D", "3"), list)
     }
 
-    //@Test
-    /*
-    fun contextualBeanJarTest() = testSuspend {
-        val jar = BeanJar()
-        jar.setBean(23)
-        val actual: Int
-        withContext(jar) {
-            actual = jar.getBean()
+    //@Test TODO: Something wrong with coroutines-core-js
+    fun contextualBeanJarTest() = testSuspend(BeanJar.Sync()) {
+        launch {
+            setBean(23)
         }
-        assertEquals(23, actual)
+        val actual = async {
+            yield()
+            getBean<Int>()
+        }
+        assertEquals(23, actual.await())
+        assertEquals(23, removeBean<Int>())
+        assertNull(getBeanOrNull<Int>())
     }
-     */
 
 }

@@ -3,7 +3,6 @@ plugins {
 }
 
 dependencies {
-    val coroutinesVersion = "1.3.7"
     commonMainApi("org.jetbrains.kotlinx:kotlinx-coroutines-core-common")
     "jvmCommonApi"("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     "jsMainApi"("org.jetbrains.kotlinx:kotlinx-coroutines-core-js")

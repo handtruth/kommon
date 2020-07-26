@@ -147,7 +147,7 @@ private class LinkedListConditionImpl<T> : Condition<T>, SelectClause1<T> {
 
     @InternalCoroutinesApi
     override fun <R> registerSelectClause1(select: SelectInstance<R>, block: suspend (T) -> R) {
-        val task = CoroutineScope(select.completion.context).async { wait() }
+        val task = CoroutineScope(select.completion.context).async(start = CoroutineStart.UNDISPATCHED) { wait() }
         task.onAwait.registerSelectClause1(select, block)
         select.disposeOnSelect(DisposableHandle { if (task.isActive) task.cancel() })
     }

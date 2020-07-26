@@ -37,7 +37,7 @@ module("log")
 module("bom")
 module("delegates")
 module("state")
-module("all")
+//module("all")
 module("concurrent")
 
 //include("test-app")
