@@ -2,47 +2,145 @@ image: reg.handtruth.com/roots/kotlin/build
 
 stages:
   - build
+  - testPlatform
+  - testGroup
   - test
+  - analysis
   - package
+  - deploy
 
 cache:
   paths:
-    - .gradle/wrapper
-    - .gradle/caches
+    - .gradle
 
 variables:
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
   GIT_SUBMODULE_STRATEGY: normal
+  GRADLE: ./gradlew -Pci --console=plain --no-daemon --max-workers=1 --stacktrace
 
-Build:
+assemble:
   stage: build
   script:
-    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 --stacktrace assemble
-  artifacts:
+    - $GRADLE assemble
+  artifacts: &artifacts
     paths:
       - build
+      - 'modules/*/build'
 
-Test:
+.test: &test
+  script:
+    - $GRADLE $CI_JOB_NAME
+  artifacts: *artifacts
+
+.platformTest: &platformTest
+  <<: *test
+  stage: testPlatform
+  needs:
+    - assemble
+  artifacts:
+    reports:
+      junit:
+        - 'modules/*/build/test-results/$CI_JOB_NAME/TEST-*.xml'
+
+jvmTest: *platformTest
+
+jsBrowserTest: *platformTest
+
+jsNodeTest: *platformTest
+
+linuxX64Test: *platformTest
+
+testDebugUnitTest: *platformTest
+
+testReleaseUnitTest: *platformTest
+
+.groupTest: &groupTest
+  <<: *test
+  stage: testGroup
+
+jsTest:
+  <<: *groupTest
+  needs:
+    - jsNodeTest
+    - jsBrowserTest
+
+androidTest:
+  stage: testGroup
+  needs:
+    - testDebugUnitTest
+    - testReleaseUnitTest
+  script:
+    - $GRADLE test
+  artifacts: *artifacts
+
+allTest:
+  <<: *test
+  stage: test
+  needs:
+    - jvmTest
+    - jsTest
+    - androidTest
+    - linuxX64Test
+  cache:
+    policy: pull
+
+lint:
   stage: test
   script:
-    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 --stacktrace check
-  artifacts:
-    paths:
-      - build
+    - $GRADLE ktlintCheck
+  needs:
+    - assemble
+  cache:
+    policy: pull
 
-.AndroidTest:
+androidLint:
   stage: test
   script:
-    - adb connect android
-    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 --stacktrace :test-app:connectedAndroidTest
-  artifacts:
-    paths:
-      - build
+    - $GRADLE lint
+  needs:
+    - assemble
+  cache:
+    policy: pull
 
-Package:
+coverage:
+  stage: analysis
+  script:
+    - $GRADLE rootTestCoverageReport
+    - cat build/reports/jacoco/rootTestCoverageReport/html/index.html || true
+  coverage: "/Total.*?([0-9]{1,3})%/"
+  artifacts: *artifacts
+  needs:
+    - jvmTest
+
+mavenSnapshot:
   stage: package
   script:
-    - ./gradlew -Pci --console=plain --no-daemon --max-workers=1 --stacktrace publishToMavenLocal
+    - $GRADLE publish
+  needs:
+    - assemble
+  cache:
+    policy: pull
+
+mavenRelease:
+  stage: package
+  script:
+    - $GRADLE publishToMavenLocal
   tags: [ package ]
-  only:
-    - tags
+  only: [ tags ]
+  needs:
+    - assemble
+  cache:
+    policy: pull
+
+pages:
+  stage: package
+  script:
+    - $GRADLE gitlabPagesCreate
+  only: [ tags ]
+  needs:
+    - coverage
+  artifacts:
+    paths:
+      - public
+  cache:
+    policy: pull

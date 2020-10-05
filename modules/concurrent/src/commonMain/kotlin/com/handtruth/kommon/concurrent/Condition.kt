@@ -2,13 +2,13 @@
 
 package com.handtruth.kommon.concurrent
 
+import kotlin.coroutines.resume
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.selects.SelectClause1
 import kotlinx.coroutines.selects.SelectInstance
 import kotlinx.coroutines.sync.Mutex
-import kotlin.coroutines.resume
 
 interface Condition<T> {
     val count: Int
@@ -38,8 +38,9 @@ private class COWConditionImpl<T> : Condition<T>, SelectClause1<T> {
         val isNotUsed: Boolean get() = notUsed.value
         inline fun use(block: (CancellableContinuation<T>) -> Unit) {
             if (use()) {
-                if (continuation.isActive)
+                if (continuation.isActive) {
                     return block(continuation)
+                }
             }
         }
     }
@@ -127,8 +128,9 @@ private class LinkedListConditionImpl<T> : Condition<T>, SelectClause1<T> {
         do {
             val continuation = channel.poll()
             continuation?.let {
-                if (it.isActive)
+                if (it.isActive) {
                     block(it)
+                }
             }
         } while (continuation != null)
     }
@@ -147,7 +149,9 @@ private class LinkedListConditionImpl<T> : Condition<T>, SelectClause1<T> {
 
     @InternalCoroutinesApi
     override fun <R> registerSelectClause1(select: SelectInstance<R>, block: suspend (T) -> R) {
-        val task = CoroutineScope(select.completion.context).async(start = CoroutineStart.UNDISPATCHED) { wait() }
+        val task = CoroutineScope(select.completion.context).async(
+            start = CoroutineStart.UNDISPATCHED
+        ) { wait() }
         task.onAwait.registerSelectClause1(select, block)
         select.disposeOnSelect(DisposableHandle { if (task.isActive) task.cancel() })
     }

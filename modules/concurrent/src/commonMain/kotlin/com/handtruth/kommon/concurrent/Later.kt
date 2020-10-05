@@ -44,7 +44,11 @@ internal abstract class SafeLater<out T> : Later<T> {
     @Suppress("UNCHECKED_CAST")
     final override val value: T? get() = if (isInitialized) data.value as T else null
 
-    final override fun toString(): String = if (isInitialized) actual.toString() else "later value not initialized yet"
+    final override fun toString(): String = if (isInitialized) {
+        actual.toString()
+    } else {
+        "later value not initialized yet"
+    }
 }
 
 inline fun <T> later(crossinline block: suspend () -> T): Later<T> {
@@ -53,7 +57,7 @@ inline fun <T> later(crossinline block: suspend () -> T): Later<T> {
     }
 }
 
-internal class InitializedLater<T>(override val value: T): Later<T> {
+internal class InitializedLater<T>(override val value: T) : Later<T> {
     override val isInitialized get() = true
     override suspend fun get() = value
     override fun toString(): String = value.toString()

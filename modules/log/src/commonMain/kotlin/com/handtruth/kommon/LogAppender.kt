@@ -19,7 +19,9 @@ internal class LogAppender(private val log: Log, private val level: LogLevel) : 
         value ?: return this
         var oldPos = startIndex
         while (true) {
-            val pos = value.indexOf(startIndex = oldPos, char = '\n').let { if (it >= endIndex) -1 else it }
+            val pos = value.indexOf(startIndex = oldPos, char = '\n').let {
+                if (it >= endIndex) -1 else it
+            }
             if (pos == -1) {
                 data.append(value.subSequence(oldPos, endIndex))
                 break

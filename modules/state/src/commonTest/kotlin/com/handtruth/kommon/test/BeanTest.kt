@@ -2,11 +2,11 @@ package com.handtruth.kommon.test
 
 import com.handtruth.kommon.*
 import io.ktor.test.dispatcher.testSuspend
-import kotlinx.coroutines.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlinx.coroutines.*
 
 class BeanTest {
 
@@ -31,7 +31,7 @@ class BeanTest {
         assertEquals(listOf("1", "2", "D", "3"), list)
     }
 
-    //@Test TODO: Something wrong with coroutines-core-js
+    // @Test TODO: Something wrong with coroutines-core-js
     fun contextualBeanJarTest() = testSuspend(BeanJar.Sync()) {
         launch {
             setBean(23)
@@ -44,5 +44,4 @@ class BeanTest {
         assertEquals(23, removeBean<Int>())
         assertNull(getBeanOrNull<Int>())
     }
-
 }

@@ -1,21 +1,24 @@
 package com.handtruth.kommon
 
-import kotlinx.atomicfu.AtomicRef
-import kotlinx.atomicfu.atomic
-import kotlinx.atomicfu.locks.ReentrantLock
-import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
-import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
+import kotlinx.atomicfu.AtomicRef
+import kotlinx.atomicfu.atomic
+import kotlinx.atomicfu.locks.SynchronizedObject
 
-class BeanNotFoundException internal constructor(val type: KType) : RuntimeException("bean of type $type not found")
+class BeanNotFoundException internal constructor(val type: KType) : RuntimeException(
+    "bean of type $type not found"
+)
+
 class NotBeanJarContextException(message: String) : RuntimeException(message)
 
 private fun getJar(context: CoroutineContext): BeanJar {
-    return context[BeanJar] ?: throw NotBeanJarContextException("Coroutine context $context has not bean jar")
+    return context[BeanJar] ?: throw NotBeanJarContextException(
+        "Coroutine context $context has not bean jar"
+    )
 }
 
 interface BeanContainer {
@@ -34,6 +37,7 @@ inline fun <reified B : Any> BeanContainer.removeBean(): B? = removeBean(typeOf<
 
 sealed class BeanJar : BeanContainer, CoroutineContext.Element {
     companion object Key : CoroutineContext.Key<BeanJar>
+
     final override val key get() = Key
 
     open class Simple : BeanJar(), CoroutineContext.Element {
@@ -46,7 +50,10 @@ sealed class BeanJar : BeanContainer, CoroutineContext.Element {
         }
 
         final override fun getBeanOrNull(type: KType): Any? = beans[type]
-        final override fun getBean(type: KType): Any = beans[type] ?: throw BeanNotFoundException(type)
+        final override fun getBean(type: KType): Any = beans[type] ?: throw BeanNotFoundException(
+            type
+        )
+
         final override fun removeBean(type: KType): Any? = beans.remove(type)
     }
 
@@ -64,7 +71,9 @@ sealed class BeanJar : BeanContainer, CoroutineContext.Element {
         }
 
         final override fun getBeanOrNull(type: KType): Any? = beans.value[type]
-        final override fun getBean(type: KType): Any = beans.value[type] ?: throw BeanNotFoundException(type)
+        final override fun getBean(type: KType): Any = beans.value[type]
+            ?: throw BeanNotFoundException(type)
+
         final override fun removeBean(type: KType): Any? {
             kotlinx.atomicfu.locks.synchronized(lock) {
                 val bean = beans.value[type]
@@ -99,8 +108,14 @@ internal fun removeBean(context: CoroutineContext, type: KType): Any? {
     return jar.removeBean(type)
 }
 
-inline operator fun <reified B : Any> BeanJar.getValue(thisRef: Any?, property: KProperty<*>): B = getBean()
-inline operator fun <reified B : Any> BeanJar.setValue(thisRef: Any?, property: KProperty<*>, value: B) = setBean(value)
+inline operator fun <reified B : Any> BeanJar.getValue(thisRef: Any?, property: KProperty<*>): B =
+    getBean()
+
+inline operator fun <reified B : Any> BeanJar.setValue(
+    thisRef: Any?,
+    property: KProperty<*>,
+    value: B
+) = setBean(value)
 
 suspend inline fun getBeanOrNull(type: KType): Any? = getBeanOrNull(coroutineContext, type)
 suspend inline fun getBean(type: KType): Any = getBean(coroutineContext, type)

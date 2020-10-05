@@ -1,9 +1,9 @@
 package com.handtruth.kommon
 
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
 import kotlin.test.assertTrue
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class AndroidLogTest {
@@ -27,7 +27,9 @@ class AndroidLogTest {
         val builder = StringBuilder()
         val log = AppendableLog(builder, "TAG")
         log.info { "Hello World!".here }
-        assertTrue(builder.toString().startsWith("TAG [info]: Hello World! at (AndroidLogTest.kt:"), builder.toString())
+        assertTrue(
+            builder.toString().startsWith("TAG [info]: Hello World! at (AndroidLogTest.kt:"),
+            builder.toString()
+        )
     }
-
 }

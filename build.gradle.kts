@@ -1,50 +1,94 @@
 @file:Suppress("UNUSED_VARIABLE")
 
-import com.android.build.gradle.LibraryPlugin
+import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
-import com.android.build.gradle.LibraryExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import org.jetbrains.dokka.gradle.DokkaPlugin
+import org.jlleitschuh.gradle.ktlint.KtlintPlugin
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
+import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+import com.android.build.gradle.LibraryPlugin
+import com.android.build.gradle.LibraryExtension
 
 plugins {
     id("com.gladed.androidgitversion")
-    id("com.android.library") apply false
+    id("org.jetbrains.dokka")
     kotlin("multiplatform") apply false
+    id("org.jlleitschuh.gradle.ktlint") apply false
+    id("com.android.library") apply false
+    jacoco
 }
 
 androidGitVersion {
     prefix = "v"
 }
 
-val versionName = androidGitVersion.name()!!
-val versionCode = androidGitVersion.code().let { if (it == 0) 1 else it }
+val groupString = "com.handtruth.kommon"
+val versionString: String = androidGitVersion.name()
+val androidVersionCode: Int = androidGitVersion.code().let { if (it == 0) 1 else it }
 
 allprojects {
+    group = groupString
+    version = versionString
+
     repositories {
-        google()
-        jcenter()
         maven("https://mvn.handtruth.com")
+        jcenter()
+        google()
     }
-    group = "com.handtruth.kommon"
-    version = versionName
 }
 
-val libModules by extra { listOf("concurrent", "log", "delegates", "state") }
+val kotlinProjects: List<String> by extra
 
-fun Project.configureProject() {
-    apply<LibraryPlugin>()
+val platformVersion: String by project
+
+val coverageSourceDirsNames = arrayOf(
+    "src/commonMain/kotlin/",
+    "src/jvmMain/kotlin/"
+)
+
+fun KotlinSourceSet.collectSources(): Iterable<File> {
+    return kotlin.srcDirs.filter { it.exists() } + dependsOn.flatMap { it.collectSources() }
+}
+
+fun KotlinSourceSet.collectSourceFiles(): ConfigurableFileCollection {
+    return files(collectSources().map { fileTree(it) })
+}
+
+fun Project.kotlinProject() {
+    val isAndroid: Boolean by extra
+    if (isAndroid) apply<LibraryPlugin>()
     apply<KotlinMultiplatformPluginWrapper>()
     apply<JacocoPlugin>()
     apply<MavenPublishPlugin>()
+    apply<DokkaPlugin>()
+    apply<KtlintPlugin>()
 
-    configure<LibraryExtension> {
+    configure<PublishingExtension> {
+        if (!System.getenv("CI").isNullOrEmpty()) repositories {
+            maven {
+                url = uri("https://git.handtruth.com/api/v4/projects/${System.getenv("CI_PROJECT_ID")}/packages/maven")
+                credentials(HttpHeaderCredentials::class) {
+                    name = "Job-Token"
+                    value = System.getenv("CI_JOB_TOKEN")!!
+                }
+                authentication {
+                    create<HttpHeaderAuthentication>("header")
+                }
+            }
+        }
+    }
+
+    if (isAndroid) configure<LibraryExtension> {
         compileSdkVersion(30)
-        buildToolsVersion("28.0.3")
+        buildToolsVersion("29.0.2")
 
         defaultConfig {
             minSdkVersion(16)
             targetSdkVersion(30)
-            versionCode = versionCode
-            versionName = versionName
+            versionCode = androidVersionCode
+            versionName = versionString
 
             testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
             consumerProguardFiles.add(file("consumer-rules.pro"))
@@ -61,6 +105,8 @@ fun Project.configureProject() {
         }
     }
 
+    lateinit var jvmMainSourceSet: KotlinSourceSet
+
     configure<KotlinMultiplatformExtension> {
         jvm {
             compilations.all {
@@ -68,9 +114,6 @@ fun Project.configureProject() {
                     jvmTarget = "1.8"
                 }
             }
-        }
-        android {
-            publishAllLibraryVariants()
         }
         js {
             browser {
@@ -82,35 +125,22 @@ fun Project.configureProject() {
             }
             nodejs()
         }
-        //wasm32()
-        /*
-        linuxArm32Hfp()
-        linuxArm64()
-        linuxMips32()
-        linuxMipsel32()
         linuxX64()
-        mingwX86()
-        mingwX64()
-        macosX64()
-        ios()
-        iosArm32()
-        iosArm64()
-        */
-
+        if (isAndroid) android {
+            publishAllLibraryVariants()
+        }
         sourceSets {
-            fun kotlinx(name: String) = "org.jetbrains.kotlinx:kotlinx-$name"
-            fun ktor(name: String) = "io.ktor:ktor-$name"
-            val platformVersion: String by project
-            val platform = dependencies.platform("com.handtruth.internal:platform:$platformVersion")
             all {
                 with(languageSettings) {
-                    useExperimentalAnnotation("kotlin.RequiresOptIn")
                     useExperimentalAnnotation("kotlinx.coroutines.ExperimentalCoroutinesApi")
+                    useExperimentalAnnotation("kotlin.RequiresOptIn")
                 }
                 dependencies {
-                    implementation(platform)
-                    api(platform)
-                    //compileOnly(platform)
+                    val handtruthPlatform = dependencies.platform("com.handtruth.internal:platform:$platformVersion")
+                    implementation(handtruthPlatform)
+                    runtimeOnly(handtruthPlatform)
+                    api(handtruthPlatform)
+                    compileOnly(handtruthPlatform)
                 }
             }
             val commonMain by getting {
@@ -122,39 +152,39 @@ fun Project.configureProject() {
                 dependencies {
                     implementation(kotlin("test-common"))
                     implementation(kotlin("test-annotations-common"))
-                    implementation(kotlinx("coroutines-core-common"))
-                    implementation(ktor("test-dispatcher"))
                 }
             }
-            val jvmCommon by creating {
+            val jvmCommonMain by creating {
+                targetFromPreset(presets["jvm"])
                 dependsOn(commonMain)
-                dependencies {
-                    compileOnly(platform)
-                    implementation(kotlin("stdlib-jdk8"))
-                }
+            }
+            val jvmCommonTest by creating {
+                dependsOn(commonTest)
             }
             val jvmMain by getting {
-                dependsOn(jvmCommon)
+                dependsOn(jvmCommonMain)
             }
+            jvmMainSourceSet = jvmMain
             val jvmTest by getting {
+                dependsOn(jvmCommonTest)
                 dependencies {
-                    implementation(kotlin("test-junit"))
-                    implementation(kotlinx("coroutines-core"))
-                    implementation(ktor("test-dispatcher-jvm"))
+                    implementation(kotlin("test-junit5"))
+                    runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
                 }
             }
-            val androidMain by getting {
-                dependsOn(jvmCommon)
-            }
-            val androidTest by getting {
-                dependencies {
-                    implementation(kotlin("test-junit"))
-                    implementation("androidx.test:core")
-                    implementation("androidx.test:runner")
-                    implementation("androidx.test.ext:junit")
-                    implementation("org.robolectric:robolectric")
-                    implementation(kotlinx("coroutines-android"))
-                    implementation(ktor("test-dispatcher-jvm"))
+            if (isAndroid) {
+                val androidMain by getting {
+                    dependsOn(jvmCommonMain)
+                }
+                val androidTest by getting {
+                    dependsOn(jvmCommonTest)
+                    dependencies {
+                        implementation(kotlin("test-junit"))
+                        implementation("androidx.test:core")
+                        implementation("androidx.test:runner")
+                        implementation("androidx.test.ext:junit")
+                        implementation("org.robolectric:robolectric")
+                    }
                 }
             }
             val jsMain by getting {
@@ -165,24 +195,17 @@ fun Project.configureProject() {
             val jsTest by getting {
                 dependencies {
                     implementation(kotlin("test-js"))
-                    implementation(kotlinx("coroutines-core-js"))
-                    implementation(ktor("test-dispatcher-js"))
                 }
             }
             val nativeMain by creating {
                 dependsOn(commonMain)
             }
             val nativeTest by creating {
-                dependsOn(commonMain)
-                dependencies {
-                    implementation(kotlinx("coroutines-core-native"))
-                    implementation(ktor("test-dispatcher-native"))
-                }
+                dependsOn(nativeMain)
             }
 
-            sequenceOf<String>(
-                //"wasm32"//, "linuxArm32Hfp", "linuxArm64", "linuxMips32", "linuxMipsel32", "linuxX64",
-                //"mingwX86", "mingwX64", "ios", "iosArm32", "iosArm64"
+            sequenceOf(
+                "linuxX64"
             ).forEach {
                 val map = asMap
                 map["${it}Main"]?.apply {
@@ -195,40 +218,119 @@ fun Project.configureProject() {
         }
     }
 
-    val jacoco = extensions["jacoco"] as JacocoPluginExtension
+    configure<KtlintExtension> {
+        version.set("0.39.0")
+        verbose.set(true)
+        outputToConsole.set(true)
+        enableExperimentalRules.set(true)
+        outputColorName.set("RED")
+        android.set(true)
+        disabledRules.add("no-wildcard-imports")
 
-    with(jacoco) {
-        toolVersion = "0.8.5"
-        reportsDir = file("${buildDir}/jacoco-reports")
+        reporters {
+            reporter(ReporterType.PLAIN)
+            reporter(ReporterType.CHECKSTYLE)
+        }
     }
 
-    tasks {
-        val jvmTest by getting {}
-        val testCoverageReport by creating(JacocoReport::class) {
-            dependsOn(jvmTest)
-            group = "Reporting"
-            description = "Generate Jacoco coverage reports."
-            val coverageSourceDirs = arrayOf(
-                "commonMain/src",
-                "jvmMain/src"
-            )
-            val classFiles = file("${buildDir}/classes/kotlin/jvm/")
-                .walkBottomUp()
-                .toSet()
-            classDirectories.setFrom(classFiles)
-            sourceDirectories.setFrom(files(coverageSourceDirs))
-            additionalSourceDirs.setFrom(files(coverageSourceDirs))
+    configure<JacocoPluginExtension> {
+        toolVersion = "0.8.6"
+    }
 
-            executionData.setFrom(files("${buildDir}/jacoco/jvmTest.exec"))
-            reports {
-                xml.isEnabled = true
-                csv.isEnabled = false
-                html.isEnabled = true
-                html.destination = file("${buildDir}/jacoco-reports/html")
-            }
+    val jvmTest by tasks.getting(Test::class) {
+        useJUnitPlatform()
+        testLogging {
+            events("passed", "skipped", "failed")
         }
+    }
+
+    val testCoverageReport by tasks.creating(JacocoReport::class) {
+        dependsOn(jvmTest)
+        group = "Reporting"
+        description = "Generate Jacoco coverage reports."
+
+        val classFiles = Callable {
+            File(buildDir, "classes/kotlin/jvm/main")
+                .walkBottomUp()
+                .toList()
+        }
+
+        val sourceDirs = files(*coverageSourceDirsNames)
+
+        classDirectories.setFrom(classFiles)
+        sourceDirectories.setFrom(jvmMainSourceSet.collectSources())
+
+        executionData.setFrom(files("${buildDir}/jacoco/jvmTest.exec"))
     }
 }
 
-libModules.forEach { project(":kommon-$it").configureProject() }
-//project(":kommon-all").configureProject()
+configure<JacocoPluginExtension> {
+    toolVersion = "0.8.6"
+}
+
+val thisProjects = kotlinProjects.map { project(":$name-$it") }
+
+thisProjects.forEach {
+    it.kotlinProject()
+}
+
+tasks {
+    val mergeTestCoverageReport by creating(JacocoMerge::class) {
+        group = "Reporting"
+        val pTasks = Callable { thisProjects.map { it.tasks["jvmTest"] } }
+        dependsOn(pTasks)
+        executionData(pTasks)
+    }
+    val rootTestCoverageReport by creating(JacocoReport::class) {
+        dependsOn(mergeTestCoverageReport)
+        group = "Reporting"
+        description = "Generate Jacoco coverage reports."
+        val coverageSourceDirs = thisProjects.map {
+            it.tasks.getByName<JacocoReport>("testCoverageReport").sourceDirectories
+        }
+
+        val classFiles = Callable {
+            thisProjects.map {
+                it.tasks.getByName<JacocoReport>("testCoverageReport").classDirectories
+            }
+        }
+
+        classDirectories.setFrom(classFiles)
+        sourceDirectories.setFrom(coverageSourceDirs)
+
+        executionData.setFrom(mergeTestCoverageReport)
+
+        reports {
+            xml.isEnabled = true
+            html.isEnabled = true
+        }
+    }
+    val dokkaHtmlMultiModule by getting(DokkaMultiModuleTask::class)
+    val pagesDest = File(projectDir, "public")
+    val gitlabPagesCreateDocs by creating(Copy::class) {
+        group = "Documentation"
+        dependsOn(dokkaHtmlMultiModule)
+        from(dokkaHtmlMultiModule)
+        into(File(pagesDest, "docs"))
+    }
+    val gitlabPagesCreateCoverage by creating(Copy::class) {
+        group = "Reporting"
+        dependsOn(rootTestCoverageReport)
+        from(rootTestCoverageReport)
+        into(File(pagesDest, "coverage"))
+    }
+    val gitlabPagesCreate by creating(Copy::class) {
+        group = "Reporting"
+        dependsOn(gitlabPagesCreateDocs, gitlabPagesCreateCoverage)
+        File(projectDir, "pages").listFiles()!!.forEach {
+            from(it)
+        }
+        destinationDir = pagesDest
+    }
+    val gitlabPagesClear by creating(Delete::class) {
+        delete = setOf(pagesDest)
+    }
+    val clean by getting {
+        dependsOn(gitlabPagesClear)
+    }
+}

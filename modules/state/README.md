@@ -1,5 +1,4 @@
-Kommon State
-=======================================================
+# Module kommon-state
 
 Currently, this module only contains `BeanJar` class. These class can be used for
 extending an object state with associated user data.

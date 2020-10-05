@@ -14,7 +14,9 @@ class Resource<T>(initial: T) {
 
     fun free(expect: States) {
         val actual = state.getAndSet(States.Free)
-        assert(expect == actual || expect == States.Read && actual == States.Free) { "e: $expect, a: $actual" }
+        assert(expect == actual || expect == States.Read && actual == States.Free) {
+            "e: $expect, a: $actual"
+        }
     }
 
     inline fun <R> perform(state: States, block: () -> R): R {

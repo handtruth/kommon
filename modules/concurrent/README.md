@@ -1,5 +1,4 @@
-Kommon Concurrent
-========================================================
+# Module kommon-concurrent
 
 This module consists of several coroutine synchronization primitives.
 

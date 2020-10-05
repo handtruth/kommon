@@ -73,7 +73,6 @@ private class SemaphoreReadWriteMutexImpl(val count: Int) : ReadWriteMutex {
             }
         }
     }
-
 }
 
 private class SimpleReadWriteMutex : ReadWriteMutex {

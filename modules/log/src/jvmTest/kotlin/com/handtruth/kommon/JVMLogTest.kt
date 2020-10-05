@@ -15,10 +15,17 @@ class JVMLogTest {
         )
         val builder = StringBuilder()
         val log: Log = AppendableLog(builder, "TAG", LogLevel.Error)
-        log.error(pairs.entries, Map.Entry<String, String>::key, Map.Entry<String, String>::value,
-            header = listOf("Verb", "Noun")) { "Header" }
-        assertEquals("TAG [error]: Header\n\t|Verb     |Noun|\n\t|---------|----|\n\t" +
-                "|Jump     |Cave|\n\t|Bless    |God |\n\t|Say Hello|Me  |\n", builder.toString())
+        log.error(
+            pairs.entries,
+            Map.Entry<String, String>::key,
+            Map.Entry<String, String>::value,
+            header = listOf("Verb", "Noun")
+        ) { "Header" }
+        assertEquals(
+            "TAG [error]: Header\n\t|Verb     |Noun|\n\t|---------|----|\n\t" +
+                "|Jump     |Cave|\n\t|Bless    |God |\n\t|Say Hello|Me  |\n",
+            builder.toString()
+        )
     }
 
     @Test
@@ -28,7 +35,6 @@ class JVMLogTest {
         log.info { "Hello World!".here }
         assertTrue(builder.toString().startsWith("TAG [info]: Hello World! at (JVMLogTest.kt:"))
         val mark = Mark.here()
-        assertEquals(Mark("JVMLogTest.kt", 30), mark)
+        assertEquals(Mark("JVMLogTest.kt", 37), mark)
     }
-
 }

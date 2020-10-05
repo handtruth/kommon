@@ -59,5 +59,4 @@ class JVMDelegatesTest {
         double = 13.125
         assertEquals(13.125, double)
     }
-
 }

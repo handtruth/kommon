@@ -1,5 +1,4 @@
-Kommon Log
-=====================================================
+# Module kommon-log
 
 Log module introduces lightweight logging system for Kotlin.
 
