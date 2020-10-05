@@ -1,10 +1,11 @@
 package com.handtruth.kommon.concurrent.test
 
 import com.handtruth.kommon.concurrent.*
+import kotlin.test.Ignore
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.withLock
-import org.junit.Test
-import kotlin.test.assertEquals
 
 class ReadWriteMutexTest {
 
@@ -52,11 +53,10 @@ class ReadWriteMutexTest {
         Unit
     }
 
-    @Test
+    @Test @Ignore
     fun readWriteMutexTestRepeat() {
         repeat(100) {
             readWriteMutexTest()
         }
     }
-
 }

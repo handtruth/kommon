@@ -1,4 +1,4 @@
-Kommon All
+# Module kommon-all
 ======================================================
 
 All library modules as one dependency.

@@ -23,5 +23,4 @@ class DelegatesTest {
         }
         assertEquals("Ktlo", name)
     }
-
 }

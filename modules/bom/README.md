@@ -1,5 +1,4 @@
-Kommon BOM
-=============================================================
+# Module kommon-bom
 
 Bill of Materials module contains a big POM file with versions of each module
 in this library and its target implementations. Basically, versions should be

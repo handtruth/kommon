@@ -2,12 +2,12 @@ package com.handtruth.kommon.concurrent.test
 
 import com.handtruth.kommon.concurrent.later
 import io.ktor.test.dispatcher.testSuspend
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class LaterTest {
 
@@ -41,5 +41,4 @@ class LaterTest {
 
         assertEquals(1, cnt.get())
     }
-
 }

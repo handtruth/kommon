@@ -57,5 +57,4 @@ class LogTest {
         }
         assertEquals("TAG [fatal]: fatal: $strE", sukaBlyatSlozno())
     }
-
 }

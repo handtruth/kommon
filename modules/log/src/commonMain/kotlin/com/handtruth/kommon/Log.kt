@@ -40,7 +40,11 @@ abstract class Log(protected var lvl: LogLevel) : CoroutineContext.Element {
     @PublishedApi
     internal fun internalWrite(lvl: LogLevel, message: Any?) = write(lvl, message)
 
-    fun appender(lvl: LogLevel): Appendable = if (lvl <= level) LogAppender(this, lvl) else VoidAppender
+    fun appender(lvl: LogLevel): Appendable = if (lvl <= level) {
+        LogAppender(this, lvl)
+    } else {
+        VoidAppender
+    }
 
     protected open fun exception(lvl: LogLevel, message: Any?, throwable: Throwable) {
         writeException(lvl, message, throwable)
@@ -50,25 +54,29 @@ abstract class Log(protected var lvl: LogLevel) : CoroutineContext.Element {
         exception(lvl, message, throwable)
 
     inline fun write(lvl: LogLevel, message: LogContext.() -> Any?) {
-        if (lvl <= level)
+        if (lvl <= level) {
             internalWrite(lvl, LogContext.message())
+        }
     }
 
     inline fun exception(lvl: LogLevel, message: LogContext.() -> Any?, throwable: Throwable) {
-        if (lvl <= level)
+        if (lvl <= level) {
             internalException(lvl, LogContext.message(), throwable)
+        }
     }
 
     inline fun fatal(message: () -> Any?): Nothing {
         val str = message()
-        if (LogLevel.Fatal <= level)
+        if (LogLevel.Fatal <= level) {
             internalWrite(LogLevel.Fatal, str)
+        }
         throw FatalError(str.toString())
     }
     inline fun fatal(throwable: Throwable, message: () -> Any? = { "error occured" }): Nothing {
         val str = message()
-        if (LogLevel.Fatal <= level)
+        if (LogLevel.Fatal <= level) {
             internalException(LogLevel.Fatal, message().toString(), throwable)
+        }
         throw FatalError(str.toString(), throwable)
     }
     inline fun error(message: LogContext.() -> Any?) = write(LogLevel.Error, message)

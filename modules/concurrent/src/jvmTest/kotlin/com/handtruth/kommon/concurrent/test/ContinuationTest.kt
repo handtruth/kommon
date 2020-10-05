@@ -1,10 +1,10 @@
 package com.handtruth.kommon.concurrent.test
 
 import com.handtruth.kommon.concurrent.Condition
-import kotlinx.coroutines.*
-import kotlinx.coroutines.selects.select
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.coroutines.*
+import kotlinx.coroutines.selects.select
 
 class ContinuationTest {
 
@@ -28,5 +28,4 @@ class ContinuationTest {
         condition.wakeOne("good")
         assertEquals("good", result.await())
     }
-
 }

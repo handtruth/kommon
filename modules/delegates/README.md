@@ -1,5 +1,4 @@
-Kommon Delegates
-========================================================
+# Module kommon-delegates
 
 Some delegates with doubtful usability.
 

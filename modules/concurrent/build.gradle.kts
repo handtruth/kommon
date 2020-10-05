@@ -3,13 +3,8 @@ plugins {
 }
 
 dependencies {
-    commonMainApi("org.jetbrains.kotlinx:kotlinx-coroutines-core-common")
-    "jvmCommonApi"("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-    "jsMainApi"("org.jetbrains.kotlinx:kotlinx-coroutines-core-js")
-    "nativeMainApi"("org.jetbrains.kotlinx:kotlinx-coroutines-core-native")
+    commonMainApi("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     val atomicfuVersion: String by project
-    commonMainImplementation("org.jetbrains.kotlinx:atomicfu-common:$atomicfuVersion")
-    "jvmCommonImplementation"("org.jetbrains.kotlinx:atomicfu:$atomicfuVersion")
-    "jsMainImplementation"("org.jetbrains.kotlinx:atomicfu-js:$atomicfuVersion")
-    "nativeMainImplementation"("org.jetbrains.kotlinx:atomicfu-native:$atomicfuVersion")
+    commonMainImplementation("org.jetbrains.kotlinx:atomicfu:$atomicfuVersion")
+    commonTestApi("io.ktor:ktor-test-dispatcher")
 }

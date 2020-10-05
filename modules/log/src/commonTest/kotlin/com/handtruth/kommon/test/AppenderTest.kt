@@ -15,10 +15,13 @@ class AppenderTest {
         info.append("Hello")
         assertEquals("", builder.toString())
         info.append(" World\n AnotherLine\nAnd One More")
-        assertEquals("""
+        assertEquals(
+            """
             TAG [info]: Hello World
             TAG [info]:  AnotherLine
-""".trimIndent() + '\n', builder.toString())
+            """.trimIndent() + '\n',
+            builder.toString()
+        )
         builder.clear()
         info.append("There is\n world", 5, 8)
         assertEquals("", builder.toString())
@@ -40,5 +43,4 @@ class AppenderTest {
         debug.append("Bye\n World", 0, 4)
         assertEquals("", builder.toString())
     }
-
 }

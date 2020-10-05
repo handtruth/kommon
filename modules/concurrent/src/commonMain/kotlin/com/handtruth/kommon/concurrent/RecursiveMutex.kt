@@ -2,12 +2,12 @@
 
 package com.handtruth.kommon.concurrent
 
+import kotlin.coroutines.coroutineContext
 import kotlinx.atomicfu.AtomicRef
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.selects.SelectClause1
 import kotlinx.coroutines.sync.Mutex
-import kotlin.coroutines.coroutineContext
 
 fun RecursiveMutex(parent: Mutex = Mutex()): RecursiveMutex = JobRecursiveMutexImpl(parent)
 
